@@ -1,6 +1,11 @@
 use ash::{vk, Entry};
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
+use libc::{c_void, dlopen, dlinfo, RTLD_NOW, RTLD_DI_LINKMAP, dlerror, dlclose};
+use std::ffi::{CString, CStr};
+use std::ptr::null_mut;
+use std::mem::transmute;
+use std::path::Path;
 
 const APP_NAME: &str = "Heroic\0";
 #[derive(Serialize, Deserialize)]
@@ -10,6 +15,16 @@ struct Device {
     pub minor: u32,
     pub patch: u32,
 }
+
+#[repr(C)]
+struct LinkMap {
+    l_addr: *mut c_void,
+    l_name: *mut i8,
+    l_ld: *mut c_void,
+    l_next: *mut LinkMap,
+    l_prev: *mut LinkMap,
+}
+
 fn get_instance_version() -> [u32; 3] {
     let entry = unsafe { Entry::load() }.expect("Failed to load vulkan");
     if let Ok(Some(version)) = entry.try_enumerate_instance_version() {
@@ -71,10 +86,48 @@ fn get_physical_versions() -> Vec<Device> {
     array
 }
 
+fn get_dlerror<'a>() -> &'a str 
+{
+    unsafe 
+    {
+        let err = dlerror();
+        if err.is_null()
+        {
+            return "No Error";
+        }
+        return CStr::from_ptr(err).to_str().expect("failed to convert to str")
+    }
+}
+
+fn get_nvapi_path() -> String {
+    let nvngx_lib = CString::new("libGLX_nvidia.so.0").expect("Failed to create CString");
+    let nvngx = unsafe { dlopen(nvngx_lib.as_ptr(), RTLD_NOW) };
+
+    if nvngx.is_null() {
+        panic!("dlopen failed: {}", get_dlerror());
+    }
+
+
+    let mut info: *mut LinkMap = null_mut();
+    let ret = unsafe { dlinfo(nvngx, RTLD_DI_LINKMAP, transmute(&mut info)) };
+
+    if ret != 0 {
+        panic!("dlinfo failed: {:?} {}", ret, get_dlerror());
+    }
+
+    let mut path = unsafe { Path::new(CStr::from_ptr((*info).l_name).to_str().expect("Failed to convert to str")) };
+    path = path.parent().expect("Failed to get parent path");
+
+    unsafe { dlclose(nvngx) };
+
+    return path.display().to_string();
+}
+
 #[derive(Subcommand)]
 enum Commands {
     InstanceVersion,
     PhysicalVersions,
+    NvapiPath,
 }
 
 #[derive(Parser)]
@@ -93,6 +146,10 @@ fn main() {
         Commands::PhysicalVersions => {
             let versions = get_physical_versions();
             serde_json::to_string(&versions).expect("Failed to create json output")
+        }
+        Commands::NvapiPath => {
+            let path = get_nvapi_path();
+            serde_json::to_string(&path).expect("Failed to create json output")
         }
     };
     print!("{}", data);
