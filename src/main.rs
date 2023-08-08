@@ -100,7 +100,7 @@ fn get_dlerror<'a>() -> &'a str
 }
 
 fn get_nvapi_path() -> String {
-    let nvngx_lib = CString::new("libGLX_nvidia.so.0").expect("Failed to create CString");
+    let nvngx_lib = CString::new("libc.so.6").expect("Failed to create CString");
     let nvngx = unsafe { dlopen(nvngx_lib.as_ptr(), RTLD_NOW) };
 
     if nvngx.is_null() {
@@ -152,5 +152,5 @@ fn main() {
             get_nvapi_path()
         }
     };
-    print!("{}", data);
+    print!("{}\n", data);
 }
