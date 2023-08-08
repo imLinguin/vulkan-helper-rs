@@ -115,7 +115,8 @@ fn get_nvapi_path() -> String {
         panic!("dlinfo failed: {:?} {}", ret, get_dlerror());
     }
 
-    let mut path = unsafe { Path::new(CStr::from_ptr((*info).l_name).to_str().expect("Failed to convert to str")) };
+    let path_str = unsafe { CStr::from_ptr((*info).l_name).to_str().expect("Failed to convert to str").to_string() };
+    let mut path = Path::new(&path_str);
     path = path.parent().expect("Failed to get parent path");
 
     unsafe { dlclose(nvngx) };
