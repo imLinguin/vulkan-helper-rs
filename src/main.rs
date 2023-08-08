@@ -120,7 +120,7 @@ fn get_nvapi_path() -> String {
 
     unsafe { dlclose(nvngx) };
 
-    return path.display().to_string();
+    return path.to_str().expect("Failed to convert to str").to_string();
 }
 
 #[derive(Subcommand)]
@@ -148,8 +148,7 @@ fn main() {
             serde_json::to_string(&versions).expect("Failed to create json output")
         }
         Commands::NvapiPath => {
-            let path = get_nvapi_path();
-            serde_json::to_string(&path).expect("Failed to create json output")
+            get_nvapi_path()
         }
     };
     print!("{}", data);
