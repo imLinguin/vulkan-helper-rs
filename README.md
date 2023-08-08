@@ -8,8 +8,9 @@ A simple CLI app used to interface with basic Vulkan APIs. I guess it's useful f
 Usage: vulkan-helper <COMMAND>
 
 Commands:
-  instance-version
-  physical-versions
+  instance-version   
+  physical-versions  
+  nvapi-path         
   help               Print this message or the help of the given subcommand(s)
 
 Options:
