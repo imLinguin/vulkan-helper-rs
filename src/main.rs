@@ -1,7 +1,7 @@
 use ash::{vk, Entry};
 use clap::{Parser, Subcommand};
 use serde::{Deserialize, Serialize};
-use libc::{c_void, dlopen, dlinfo, RTLD_NOW, RTLD_DI_LINKMAP, dlerror, dlclose};
+use libc::{c_void, c_char, dlopen, dlinfo, RTLD_NOW, RTLD_DI_LINKMAP, dlerror, dlclose};
 use std::ffi::{CString, CStr};
 use std::ptr::null_mut;
 use std::mem::transmute;
@@ -19,7 +19,7 @@ struct Device {
 #[repr(C)]
 struct LinkMap {
     l_addr: *mut c_void,
-    l_name: *mut i8,
+    l_name: *mut c_char,
     l_ld: *mut c_void,
     l_next: *mut LinkMap,
     l_prev: *mut LinkMap,
@@ -42,7 +42,7 @@ fn get_physical_versions() -> Vec<Device> {
     let entry = unsafe { Entry::load() }.expect("Failed to load vulkan");
 
     let app_info = vk::ApplicationInfo {
-        p_application_name: APP_NAME.as_ptr() as *const i8,
+        p_application_name: APP_NAME.as_ptr() as *const c_char,
         application_version: vk::make_api_version(0, 1, 0, 0),
         api_version: vk::make_api_version(0, 1, 3, 0),
         ..Default::default()
