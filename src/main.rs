@@ -14,6 +14,7 @@ struct Device {
     pub major: u32,
     pub minor: u32,
     pub patch: u32,
+    pub device_type: String,
 }
 
 #[repr(C)]
@@ -35,6 +36,17 @@ fn get_instance_version() -> [u32; 3] {
         [major, minor, patch]
     } else {
         [0, 0, 0]
+    }
+}
+
+fn device_type_to_string(device_type: vk::PhysicalDeviceType) -> String {
+    match device_type {
+        vk::PhysicalDeviceType::INTEGRATED_GPU => "integrated".to_string(),
+        vk::PhysicalDeviceType::DISCRETE_GPU => "dedicated".to_string(),
+        vk::PhysicalDeviceType::VIRTUAL_GPU => "virtual".to_string(),
+        vk::PhysicalDeviceType::CPU => "cpu".to_string(),
+        vk::PhysicalDeviceType::OTHER => "other".to_string(),
+        _ => "unknown".to_string(),
     }
 }
 
@@ -73,11 +85,13 @@ fn get_physical_versions() -> Vec<Device> {
         let major = vk::api_version_major(properties.api_version);
         let minor = vk::api_version_minor(properties.api_version);
         let patch = vk::api_version_patch(properties.api_version);
+        let device_type = device_type_to_string(properties.device_type);
         let device_struct = Device {
             name,
             major,
             minor,
             patch,
+            device_type,
         };
         array.push(device_struct);
     }
@@ -154,3 +168,4 @@ fn main() {
     };
     print!("{}\n", data);
 }
+
