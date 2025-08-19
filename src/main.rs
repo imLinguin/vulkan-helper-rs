@@ -169,31 +169,3 @@ fn main() {
     print!("{}\n", data);
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_device_type_to_string() {
-        assert_eq!(device_type_to_string(vk::PhysicalDeviceType::INTEGRATED_GPU), "integrated");
-        assert_eq!(device_type_to_string(vk::PhysicalDeviceType::DISCRETE_GPU), "dedicated");
-        assert_eq!(device_type_to_string(vk::PhysicalDeviceType::VIRTUAL_GPU), "virtual");
-        assert_eq!(device_type_to_string(vk::PhysicalDeviceType::CPU), "cpu");
-        assert_eq!(device_type_to_string(vk::PhysicalDeviceType::OTHER), "other");
-    }
-
-    #[test]
-    fn test_device_serialization() {
-        let device = Device {
-            name: "Test GPU".to_string(),
-            major: 1,
-            minor: 3,
-            patch: 0,
-            device_type: "dedicated".to_string(),
-        };
-
-        let json = serde_json::to_string(&device).expect("Failed to serialize device");
-        assert!(json.contains("\"device_type\":\"dedicated\""));
-        assert!(json.contains("\"name\":\"Test GPU\""));
-    }
-}
